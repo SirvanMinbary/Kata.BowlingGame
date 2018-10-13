@@ -45,14 +45,14 @@ namespace BowlingGameTests
         [Test]
         public void Game_AllStrikesReached()
         {
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 12; i++)
             {
                 game.Roll(10);
             }
 
             Assert.IsTrue(game.Frames.TrueForAll(x => x.FirstRoll.Value == 10 && !x.SecondRoll.HasValue));
             Assert.IsTrue(game.LastFrame.FirstRoll.Value == 10);
-            Assert.IsTrue(!game.LastFrame.SecondRoll.HasValue);
+            Assert.IsTrue(game.LastFrame.SecondRoll.Value == 10);
             Assert.IsTrue(game.LastFrame.ThirdRoll.Value == 10);
         }
 
@@ -110,6 +110,83 @@ namespace BowlingGameTests
             var lastFrame = game.LastFrame;
             Assert.IsTrue(frames.TrueForAll(x => x.FirstRoll.HasValue && x.SecondRoll.HasValue));
             Assert.IsTrue(lastFrame.FirstRoll.HasValue && lastFrame.SecondRoll.HasValue && lastFrame.ThirdRoll.HasValue);
+        }
+
+        [Test]
+        public void Game_ZeroScore()
+        {
+            for (int i = 0; i < 20; i++)
+            {
+                game.Roll(0);
+            }
+
+            var score = game.Score();
+
+            Assert.AreEqual(0, score);
+        }
+
+        [Test]
+        public void Game_StrikeScore()
+        {
+            game.Roll(10);
+            game.Roll(1);
+            game.Roll(1);
+
+            for (int i = 0; i < 16; i++)
+            {
+                game.Roll(0);
+            }
+
+            var expected = 10 + 2 + 2;
+            var score = game.Score();
+
+            Assert.AreEqual(expected, score);
+        }
+
+        [Test]
+        public void Game_SpareScore()
+        {
+            game.Roll(5);
+            game.Roll(5);
+            game.Roll(5);
+
+            for (int i = 0; i < 17; i++)
+            {
+                game.Roll(0);
+            }
+
+            var expected = 10 + 5 + 5;
+            var actual = game.Score();
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void Game_AllOneRolls()
+        {
+            for (int i = 0; i < 20; i++)
+            {
+                game.Roll(1);
+            }
+
+            var expected = 21;
+            var actual = game.Score();
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void Game_PerfectScore()
+        {
+            for (int i = 0; i < 12; i++)
+            {
+                game.Roll(10);
+            }
+
+            var expected = 300;
+            var actual = game.Score();
+
+            Assert.AreEqual(expected, actual);
         }
     }
 }

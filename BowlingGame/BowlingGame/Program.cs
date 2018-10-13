@@ -90,7 +90,100 @@ namespace BowlingGame
 
         public int Score()
         {
-            throw new NotImplementedException();
+            int score = 0;
+            for (int i = 0; i < Frames.Count; i++)
+            {
+                var frame = Frames[i];
+                if (!frame.AdvanceNextFrame)
+                {
+                    continue;
+                }
+
+                switch (frame.Modifier)
+                {
+                    case ScoreModifier.None:
+                        score += CalculateNormalPoints(frame);
+                        break;
+                    case ScoreModifier.Spare:
+                        score += CalculateSparePoints(i);
+                        break;
+                    case ScoreModifier.Strike:
+                        score += CalculateStrikePoints(i);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            score += LastFrame.Score;
+
+            return score;
+        }
+
+        private int CalculateNormalPoints(Frame frame)
+        {
+            return frame.FirstRoll.Value + frame.SecondRoll.Value;
+        }
+
+        private int CalculateSparePoints(int frameIndex)
+        {
+            var nextIndex = frameIndex++;
+            if (nextIndex == 10)
+            {
+                return 10 + LastFrame.FirstRoll.Value;
+            }
+
+            var nextFrame = Frames[nextIndex];
+
+            return 10 + nextFrame.FirstRoll.Value;
+        }
+
+        private int CalculateStrikePoints(int frameIndex)
+        {
+            int score = 0;
+
+            var strikeFrame = Frames[frameIndex];
+            score += strikeFrame.FirstRoll.Value;
+
+            var nextIndex = frameIndex + 1;
+            if (nextIndex == 10)
+            {
+                switch (LastFrame.Modifier)
+                {
+                    case ScoreModifier.None:
+                    case ScoreModifier.Spare:
+                        score += LastFrame.FirstRoll.Value + LastFrame.SecondRoll.Value;
+                        break;
+                    case ScoreModifier.Strike:
+                        score += LastFrame.FirstRoll.Value + LastFrame.ThirdRoll.Value;
+                        break;
+                }
+            }
+            else
+            {
+                var nextRoll = Frames[nextIndex];
+                score += nextRoll.FirstRoll.Value;
+                if (nextRoll.Modifier == ScoreModifier.Strike)
+                {
+                    score += nextRoll.FirstRoll.Value;
+                    if (nextIndex + 1 == 10)
+                    {
+                        score += LastFrame.FirstRoll.Value;
+                    }
+                    else
+                    {
+                        nextRoll = Frames[nextIndex + 1];
+                        score += nextRoll.FirstRoll.Value;
+                    }
+                }
+                else
+                {
+                    score += nextRoll.SecondRoll.Value;
+                }
+            }
+
+
+            return score;
         }
 
         private void InitFrames()
@@ -158,6 +251,23 @@ namespace BowlingGame
             }
         }
 
+        public int Score
+        {
+            get
+            {
+                switch (Modifier)
+                {
+                    case ScoreModifier.None:
+                    case ScoreModifier.Spare:
+                        return FirstRoll.Value + SecondRoll.Value + ThirdRoll.Value;
+                    case ScoreModifier.Strike:
+                        return FirstRoll.Value + ThirdRoll.Value;
+                    default:
+                        throw new InvalidOperationException("Unknown last frame value");
+                }
+            }
+        }
+
         public override void AddRoll(int pins)
         {
             if (!FirstRoll.HasValue)
@@ -168,7 +278,7 @@ namespace BowlingGame
                     Modifier = ScoreModifier.Strike;
                 }
             }
-            else if (!SecondRoll.HasValue && Modifier != ScoreModifier.Strike)
+            else if (!SecondRoll.HasValue)
             {
                 SecondRoll = pins;
                 if (FirstRoll.Value + SecondRoll.Value == 10)
