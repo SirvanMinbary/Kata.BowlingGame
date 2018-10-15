@@ -18,6 +18,7 @@ namespace BowlingGame
     {
         public readonly int MaxFrames = 10;
         int currentFrameCount = 0;
+
         public GameState CurrentState
         {
             get
@@ -32,7 +33,7 @@ namespace BowlingGame
                     return GameState.InProgress;
                 }
 
-                if (currentFrameCount >= MaxFrames)
+                if (currentFrameCount > MaxFrames)
                 {
                     return GameState.Finished;
                 }
@@ -46,25 +47,15 @@ namespace BowlingGame
 
         public Game()
         {
-            InitFrames();
+            for (int i = 0; i < MaxFrames - 1; i++)
+            {
+                Frames.Add(new Frame());
+            }
         }
 
         public void Roll(int pins)
         {
-            if (pins < 0)
-            {
-                throw new ArgumentException("Can not knock down less than zero pins");
-            }
-
-            if (pins > 10)
-            {
-                throw new ArgumentException("Can not knock down more than 10 pins");
-            }
-
-            if (CurrentState == GameState.Finished)
-            {
-                throw new InvalidOperationException("Maximum amount of frames has been reached");
-            }
+            CheckExceptions(pins);
 
             if (CurrentState == GameState.InProgress)
             {
@@ -85,7 +76,24 @@ namespace BowlingGame
                     currentFrameCount++;
                 }
             }
+        }
 
+        private void CheckExceptions(int pins)
+        {
+            if (pins < 0)
+            {
+                throw new ArgumentException("Can not knock down less than zero pins");
+            }
+
+            if (pins > 10)
+            {
+                throw new ArgumentException("Can not knock down more than 10 pins");
+            }
+
+            if (CurrentState == GameState.Finished)
+            {
+                throw new InvalidOperationException("Maximum amount of frames has been reached");
+            }
         }
 
         public int Score()
@@ -146,7 +154,7 @@ namespace BowlingGame
             score += strikeFrame.FirstRoll.Value;
 
             var nextIndex = frameIndex + 1;
-            if (nextIndex == 10)
+            if (nextIndex == 9)
             {
                 switch (LastFrame.Modifier)
                 {
@@ -155,7 +163,7 @@ namespace BowlingGame
                         score += LastFrame.FirstRoll.Value + LastFrame.SecondRoll.Value;
                         break;
                     case ScoreModifier.Strike:
-                        score += LastFrame.FirstRoll.Value + LastFrame.ThirdRoll.Value;
+                        score += LastFrame.FirstRoll.Value + LastFrame.SecondRoll.Value + LastFrame.ThirdRoll.Value;
                         break;
                 }
             }
@@ -172,8 +180,15 @@ namespace BowlingGame
                     }
                     else
                     {
-                        nextRoll = Frames[nextIndex + 1];
-                        score += nextRoll.FirstRoll.Value;
+                        if (nextIndex + 1 == 9)
+                        {
+                            score += LastFrame.FirstRoll.Value;
+                        }
+                        else
+                        {
+                            nextRoll = Frames[nextIndex + 1];
+                            score += nextRoll.FirstRoll.Value;
+                        }
                     }
                 }
                 else
@@ -184,14 +199,6 @@ namespace BowlingGame
 
 
             return score;
-        }
-
-        private void InitFrames()
-        {
-            for (int i = 0; i < MaxFrames - 1; i++)
-            {
-                Frames.Add(new Frame());
-            }
         }
     }
 

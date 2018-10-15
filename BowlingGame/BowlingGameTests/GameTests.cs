@@ -45,7 +45,7 @@ namespace BowlingGameTests
         [Test]
         public void Game_AllStrikesReached()
         {
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < 11; i++)
             {
                 game.Roll(10);
             }
@@ -105,7 +105,6 @@ namespace BowlingGameTests
             {
                 game.Roll(0);
             }
-
             var frames = game.Frames;
             var lastFrame = game.LastFrame;
             Assert.IsTrue(frames.TrueForAll(x => x.FirstRoll.HasValue && x.SecondRoll.HasValue));
@@ -178,7 +177,7 @@ namespace BowlingGameTests
         [Test]
         public void Game_PerfectScore()
         {
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < 11; i++)
             {
                 game.Roll(10);
             }
